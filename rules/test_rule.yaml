@@ -1,0 +1,9 @@
+name: "Test Rule – New Sender Domain"
+description: "Detects email from newly registered sender domains"
+severity: medium
+type: detection
+source: email
+
+query:
+  where:
+    sender.domain.age_days < 7
