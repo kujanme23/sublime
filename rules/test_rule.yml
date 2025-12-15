@@ -1,9 +1,6 @@
-name: "Test Rule – New Sender Domain"
-description: "Detects email from newly registered sender domains"
-severity: medium
+id: image_phishing_ocr
+name: Image-based Phishing via OCR
+severity: high
+description: Detects phishing attempts delivered as images using OCR.
 type: detection
-source: email
-
-query:
-  where:
-    sender.domain.age_days < 7
+source: custom
