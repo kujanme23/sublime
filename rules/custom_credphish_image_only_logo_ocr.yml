@@ -1,0 +1,50 @@
+name: "Credential phishing: Image-only lure with logo + OCR cred theft"
+description: |
+  Detects inbound messages that are mostly image content (minimal body/links) where OCR shows high-confidence
+  credential theft language and a recognizable brand logo is present.
+type: "rule"
+severity: "high"
+source: |
+  type.inbound
+  and length(body.links) < 2
+  and 0 < length(attachments) <= 2
+  and all(attachments, .file_type in $file_types_images)
+  and (
+    0 <= length(body.current_thread.text) < 50
+    or body.current_thread.text is null
+  )
+  and sender.email.domain.root_domain not in $org_domains
+  and (
+    (
+      profile.by_sender_email().prevalence in ("new", "outlier")
+      and not profile.by_sender_email().solicited
+    )
+    or (
+      profile.by_sender_email().any_messages_malicious_or_spam
+      and not profile.by_sender_email().any_messages_benign
+    )
+  )
+  and any(attachments,
+          any(file.explode(.),
+              (
+                any(ml.logo_detect(..).brands,
+                    .name in~ ("Microsoft","Okta","Google","DocuSign","Adobe")
+                    and .confidence != "low"
+                )
+                and any(ml.nlu_classifier(.scan.ocr.raw).intents,
+                        .name == "cred_theft" and .confidence in ("medium","high")
+                )
+              )
+          )
+  )
+attack_types:
+ - "Credential Phishing"
+tactics_and_techniques:
+ - "Evasion"
+ - "Image as content"
+ - "Impersonation: Brand"
+detection_methods:
+ - "Computer Vision"
+ - "Natural Language Understanding"
+ - "Optical Character Recognition"
+ - "Sender analysis"
