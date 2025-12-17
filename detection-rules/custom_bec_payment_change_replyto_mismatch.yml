@@ -1,0 +1,49 @@
+name: "BEC/Fraud: Payment or bank detail change request (reply-to mismatch)"
+description: |
+  Detects common “change bank details / payment instructions” BEC language with no links, plus reply-to mismatch
+  patterns typical of low-effort BEC.
+type: "rule"
+severity: "high"
+source: |
+  type.inbound
+  and length(body.links) == 0
+  and 1 of (
+    regex.icontains(subject.subject, '(updated|new|change).{0,25}(bank|payment|wire|ach|invoice)'),
+    regex.icontains(body.current_thread.text, '(update|change).{0,30}(bank|wiring|wire|ach|routing|account|payment details)'),
+    regex.icontains(body.current_thread.text, '(direct deposit|payroll).{0,25}(change|update)')
+  )
+  and any(headers.reply_to,
+          (
+            .email.email != sender.email.email
+            or (
+              .email.domain.domain in $free_email_providers
+              and .email.domain.domain != sender.email.domain.domain
+            )
+          )
+  )
+  and not (
+    (
+      strings.istarts_with(subject.subject, "RE:")
+      or regex.imatch(subject.subject, '(\[[^\]]+\]\s?){0,3}(re|fwd?).*')
+    )
+    and (
+      length(headers.references) > 0
+      or any(headers.hops, any(.fields, strings.ilike(.name, "In-Reply-To")))
+    )
+  )
+  and (
+    not profile.by_sender().solicited
+    or (
+      profile.by_sender().any_messages_malicious_or_spam
+      and not profile.by_sender().any_messages_benign
+    )
+  )
+attack_types:
+ - "BEC/Fraud"
+tactics_and_techniques:
+ - "Social engineering"
+ - "Evasion"
+detection_methods:
+ - "Content analysis"
+ - "Header analysis"
+ - "Sender analysis"

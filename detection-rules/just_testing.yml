@@ -1,0 +1,5 @@
+name: "Mismatched link"
+source: |
+    type.inbound
+    and any(body.links, .mismatched)
+type: rule

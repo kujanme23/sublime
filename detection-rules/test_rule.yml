@@ -1,0 +1,6 @@
+id: image_phishing_ocr
+name: Image-based Phishing via OCR
+severity: high
+description: Detects phishing attempts delivered as images using OCR.
+type: detection
+source: custom

@@ -1,0 +1,21 @@
+id: spanish_spam_detection
+name: Spanish Language Spam Campaign
+severity: low
+type: detection
+source: custom
+description: Detects common Spanish-language spam and scam campaigns.
+
+detection:
+  condition: any
+  rules:
+    - type: body
+      language: es
+      contains:
+        - "oferta limitada"
+        - "haz clic aquí"
+        - "gana dinero rápido"
+        - "verifica tu cuenta"
+    - type: subject
+      contains:
+        - "promoción exclusiva"
+        - "urgente respuesta requerida"

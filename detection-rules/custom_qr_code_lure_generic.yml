@@ -1,0 +1,41 @@
+name: "Credential phishing: QR-code lure (generic) via OCR"
+description: |
+  Detects QR-code lures in image/PDF attachments using OCR (“scan”, “QR”, “barcode”) paired with
+  additional suspicious indicators (brand logo or cred-theft intent).
+type: "rule"
+severity: "high"
+source: |
+  type.inbound
+  and any(attachments,
+          (
+            .file_type in $file_types_images
+            or .file_type == "pdf"
+          )
+          and any(file.explode(.),
+                  regex.icontains(.scan.ocr.raw, '(scan|escanea|camera|c[aá]mara)')
+                  and regex.icontains(.scan.ocr.raw, '(\bQR\b|Q\.R\.|barcode|c[oó]digo de barras)')
+          )
+  )
+  and 1 of (
+    any(attachments,
+        any(ml.logo_detect(.).brands, .confidence != "low")
+    ),
+    any(attachments,
+        any(file.explode(.),
+            any(ml.nlu_classifier(.scan.ocr.raw).intents,
+                .name == "cred_theft" and .confidence in ("medium","high")
+            )
+        )
+    )
+  )
+attack_types:
+ - "Credential Phishing"
+tactics_and_techniques:
+ - "QR code"
+ - "Image as content"
+ - "Social engineering"
+detection_methods:
+ - "Optical Character Recognition"
+ - "Computer Vision"
+ - "Natural Language Understanding"
+ - "File analysis"
