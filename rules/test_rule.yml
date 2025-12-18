@@ -1,4 +1,4 @@
-id: image_phishing_ocr
+id: image_phishing_ocr_test_rule
 name: Image-based Phishing via OCR
 severity: high
 description: Detects phishing attempts delivered as images using OCR.
